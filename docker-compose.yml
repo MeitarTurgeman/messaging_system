@@ -2,7 +2,8 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    image: meitarturgeman/messages-api:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64} # Default to amd64 but can be overridden
     ports:
       - "5000:5000"
     environment:
