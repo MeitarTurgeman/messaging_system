@@ -1,0 +1,53 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <h3>New Message</h3>
+    <form method="POST" action="/send_message">
+      <div class="mb-3">
+        <label for="receiver" class="form-label">To</label>
+        <input
+          type="email"
+          class="form-control"
+          id="receiver"
+          name="receiver"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label for="subject" class="form-label">Subject</label>
+        <input type="text" class="form-control" id="subject" name="subject" />
+      </div>
+      <div class="mb-3">
+        <label for="message" class="form-label">Message</label>
+        <textarea
+          class="form-control"
+          id="message"
+          name="message"
+          rows="3"
+          required
+        ></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Send Message</button>
+    </form>
+  </div>
+
+  <div class="col-md-8">
+    <h3>Your Messages</h3>
+    <div class="list-group">
+      {% for message in messages %}
+      <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{ message.subject or '(No subject)' }}</h5>
+          <small>{{ message.creation_date.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+        <p class="mb-1">{{ message.message }}</p>
+        <small>From: {{ message.sender }} To: {{ message.receiver }}</small>
+        {% if not message.is_read and message.receiver == current_user %}
+        <span class="badge bg-primary">New</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

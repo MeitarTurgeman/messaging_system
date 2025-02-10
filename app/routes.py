@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_from_directory
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import Message
@@ -15,7 +15,7 @@ def messages():
         try:
             data = request.get_json()
             new_message = Message(
-                sender=current_user,  # Use authenticated user as sender
+                sender=current_user,
                 receiver=data['receiver'],
                 subject=data.get('subject', ''),
                 message=data['message']
@@ -29,7 +29,7 @@ def messages():
     # GET method - return only messages for current user
     query = Message.query.filter(
         (Message.receiver == current_user) | (Message.sender == current_user)
-    )
+    ).order_by(Message.creation_date.desc())
     
     if request.args.get('unread', 'false').lower() == 'true':
         query = query.filter_by(is_read=False, receiver=current_user)
@@ -57,3 +57,7 @@ def message_operations(message_id):
         db.session.delete(message)
         db.session.commit()
         return jsonify({'message': 'Message deleted successfully'}), 200
+
+@messages_bp.route('/')
+def index():
+    return send_from_directory('../public', 'index.html')
