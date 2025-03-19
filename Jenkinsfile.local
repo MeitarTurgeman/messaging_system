@@ -41,9 +41,11 @@ pipeline {
                 script {
                     sh """
                     export KUBECONFIG=${KUBECONFIG}
-                    kubectl config use-context minikube
+                    kubectl config view
+                    kubectl config current-context || kubectl config use-context default
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
+                    kubectl get pods
                     """
                 }
             }
