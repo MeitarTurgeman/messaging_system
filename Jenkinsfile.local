@@ -41,11 +41,25 @@ pipeline {
                 script {
                     sh """
                     export KUBECONFIG=${KUBECONFIG}
+                    
+                    # Verify configuration
+                    echo "Verifying Kubernetes connection..."
                     kubectl config view
-                    kubectl config current-context || kubectl config use-context default
+                    kubectl get nodes
+                    
+                    # Deploy application
+                    echo "Deploying application..."
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
+                    
+                     # Wait for deployment
+                    echo "Waiting for deployment to complete..."
+                    kubectl rollout status deployment/flask-app
+                    
+                    # Show deployment status
+                    echo "Showing deployment status..."
                     kubectl get pods
+                    kubectl get services
                     """
                 }
             }
