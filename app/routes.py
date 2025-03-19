@@ -58,6 +58,10 @@ def message_operations(message_id):
         db.session.commit()
         return jsonify({'message': 'Message deleted successfully'}), 200
 
+ @messages_bp.route('/health', methods=['GET'])
+   def health_check():
+       return jsonify({"status": "healthy", "version": "1.1"})
+
 @messages_bp.route('/')
 def index():
     return send_from_directory('../public', 'index.html')
