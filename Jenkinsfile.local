@@ -40,26 +40,23 @@ pipeline {
             steps {
                 script {
                     sh """
-                    export KUBECONFIG=${KUBECONFIG}
+                    # Ensure directories exist
+                    mkdir -p /var/jenkins_home/.kube
+                    mkdir -p /var/jenkins_home/.minikube/profiles/minikube
+
+                    # Verify certificates exist
+                    if [ ! -f "/var/jenkins_home/.minikube/ca.crt" ] || [ ! -f "/var/jenkins_home/.minikube/profiles/minikube/client.crt" ] || [ ! -f "/var/jenkins_home/.minikube/profiles/minikube/client.key" ]; then
+                        echo "Error: Missing required certificates"
+                        ls -la /var/jenkins_home/.minikube/
+                        ls -la /var/jenkins_home/.minikube/profiles/minikube/ || true
+                        exit 1
+                    fi
                     
-                    # Verify configuration
-                    echo "Verifying Kubernetes connection..."
-                    kubectl config view
-                    kubectl get nodes
-                    
-                    # Deploy application
-                    echo "Deploying application..."
-                    kubectl apply -f kubernetes/deployment.yaml
-                    kubectl apply -f kubernetes/service.yaml
-                    
-                     # Wait for deployment
-                    echo "Waiting for deployment to complete..."
-                    kubectl rollout status deployment/flask-app
-                    
-                    # Show deployment status
-                    echo "Showing deployment status..."
-                    kubectl get pods
-                    kubectl get services
+                    # Set up kubeconfig
+                    kubectl config set-cluster minikube --server=https://192.168.49.2:8443 --certificate-authority=/var/jenkins_home/.minikube/ca.crt
+                    kubectl config set-credentials minikube --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key
+                    kubectl config set-context minikube --cluster=minikube --user=minikube
+                    kubectl config use-context minikube
                     """
                 }
             }
