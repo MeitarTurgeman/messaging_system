@@ -7,7 +7,7 @@ pipeline {
         FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
         DOCKER_REGISTRY = "docker.io"
         MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
-        DOCKER_HUB_TOKEN = credentials('DOCKER_HUB_TOKEN')
+        DOCKER_HUB_CRED = credentials('dockerhub')
     }
 
     stages {
@@ -20,11 +20,7 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'DOCKER_HUB_TOKEN', variable: 'DOCKER_HUB_TOKEN')]) {
-                        sh """
-                        echo "\$DOCKER_HUB_TOKEN" | docker login -u ${DOCKER_USER} --password-stdin || true
-                        """
-                    }
+                    sh 'echo $DOCKER_HUB_CRED_PSW | docker login -u $DOCKER_HUB_CRED_USR --password-stdin || true'
                 }
             }
         }
