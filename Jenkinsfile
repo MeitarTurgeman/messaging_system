@@ -32,7 +32,7 @@ pipeline {
         stage('Build Flask Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${FLASK_IMAGE_NAME} ."
+                    sh "docker build -t ${FLASK_IMAGE_NAME} -f app/Dockerfile-flask ."
                 }
             }
         }
