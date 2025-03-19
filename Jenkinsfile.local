@@ -5,7 +5,8 @@ pipeline {
         DOCKER_USER = "meitarturgeman"
         FLASK_CONTAINER_NAME = "flask-app"
         FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
-        DOCKER_REGISTRY = "local"
+        DOCKER_REGISTRY = "docker.io"
+        KUBECONFIG = "/var/jenkins_home/.kube/config"
     }
 
     stages {
@@ -39,6 +40,8 @@ pipeline {
             steps {
                 script {
                     sh """
+                    export KUBECONFIG=${KUBECONFIG}
+                    kubectl config use-context minikube
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
                     """
