@@ -2,7 +2,7 @@ version: '3.8'
 services:
   jenkins:
     build:
-      context: .
+      context: ..
       dockerfile: app/Dockerfile-jenkins
     container_name: jenkins-server
     ports:
@@ -13,8 +13,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: always
     environment:
-      - JAVA_OPTS="-Xmx2g -Xms512m"
+      - JAVA_OPTS=-Xmx2g
     user: root
+    privileged: true
 
 volumes:
   jenkins_data:
