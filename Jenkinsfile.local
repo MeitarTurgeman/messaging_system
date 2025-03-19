@@ -41,19 +41,23 @@ pipeline {
                 script {
                     sh """
                     export KUBECONFIG=${KUBECONFIG}
-                    echo "Current Kubernetes context:"
-                    kubectl config current-context
+                    kubectl config use-context minikube
                     
-                    echo "Deploying application..."
+                    echo "Deploying application to Kubernetes..."
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
                     
-                    echo "Waiting for deployment..."
+                    echo "Waiting for deployment to be ready..."
                     kubectl rollout status deployment/flask-app
                     
                     echo "Deployment status:"
                     kubectl get pods
                     kubectl get services
+                    
+                    echo "Accessing the application:"
+                    minikube_ip=\$(kubectl get node -o jsonpath='{.items[0].status.addresses[0].address}')
+                    port=\$(kubectl get service flask-app -o jsonpath='{.spec.ports[0].nodePort}')
+                    echo "Your application should be accessible at: http://\${minikube_ip}:\${port}"
                     """
                 }
             }
