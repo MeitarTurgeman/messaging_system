@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_USER = "meitarturgeman"
         FLASK_CONTAINER_NAME = "flask-app"
-        FLASK_IMAGE_NAME = "local/flask-app:latest"
+        FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
         DOCKER_REGISTRY = "local"
     }
 

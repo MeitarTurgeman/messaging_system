@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: local/flask-app:latest
-        imagePullPolicy: Never
+        image: meitarturgeman/messages-api:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
         env:
