@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_USER = "meitarturgeman"
+        FLASK_CONTAINER_NAME = "flask-app"
+        FLASK_IMAGE_NAME = "local/flask-app:latest"
+        DOCKER_REGISTRY = "local"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Flask Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${FLASK_IMAGE_NAME} ."
+                }
+            }
+        }
+        
+        stage('Deploy Flask Locally') {
+            steps {
+                script {
+                    sh """
+                    docker stop ${FLASK_CONTAINER_NAME} || true
+                    docker rm ${FLASK_CONTAINER_NAME} || true
+                    docker run -d --name ${FLASK_CONTAINER_NAME} -p 5000:5000 ${FLASK_IMAGE_NAME}
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh """
+                    kubectl apply -f kubernetes/deployment.yaml
+                    kubectl apply -f kubernetes/service.yaml
+                    """
+                }
+            }
+        }
+    }
+}
