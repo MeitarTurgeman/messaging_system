@@ -1,9 +1,7 @@
 version: '3.8'
 services:
   jenkins:
-    build:
-      context: ..
-      dockerfile: app/Dockerfile-jenkins
+    image: jenkins/jenkins:lts
     container_name: jenkins-server
     ports:
       - "8080:8080"
@@ -14,8 +12,8 @@ services:
     restart: always
     environment:
       - JAVA_OPTS=-Xmx2g
-    user: root
     privileged: true
+    user: root
 
 volumes:
   jenkins_data:
