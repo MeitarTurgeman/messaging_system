@@ -7,7 +7,7 @@ pipeline {
         FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
         DOCKER_REGISTRY = "docker.io"
         DOCKER_HUB_CRED = credentials('dockerhub')
-        K8S_AVAILABLE = false
+        K8S_ENABLED = false  // Set to false to disable Kubernetes stages
     }
 
     stages {
@@ -16,20 +16,8 @@ pipeline {
                 script {
                     sh '''
                     echo "Setting up environment..."
-                    
-                    # Test if we can connect to Kubernetes with a timeout
-                    if timeout 5 kubectl get nodes &>/dev/null; then
-                        echo "Kubernetes is accessible"
-                        export K8S_AVAILABLE=true
-                    else
-                        echo "Kubernetes is not accessible, will use Docker only"
-                        export K8S_AVAILABLE=false
-                    fi
+                    echo "Kubernetes stages disabled for now."
                     '''
-                    
-                    // Set the K8S_AVAILABLE environment variable for the pipeline
-                    K8S_AVAILABLE = sh(script: 'timeout 5 kubectl get nodes &>/dev/null && echo true || echo false', returnStdout: true).trim() == 'true'
-                    echo "Kubernetes available: ${K8S_AVAILABLE}"
                 }
             }
         }
@@ -67,25 +55,12 @@ pipeline {
         stage('Deploy to Kubernetes') {
             when {
                 expression {
-                    return K8S_AVAILABLE
+                    return K8S_ENABLED
                 }
             }
             steps {
                 script {
-                    echo "Attempting to deploy to Kubernetes - this may fail if connectivity issues persist"
-                    try {
-                        sh '''
-                        # Deploy to Kubernetes
-                        kubectl apply -f kubernetes/deployment.yaml --validate=false
-                        kubectl apply -f kubernetes/service.yaml --validate=false
-                        
-                        # Check deployment status
-                        kubectl rollout status deployment/flask-app --timeout=60s
-                        '''
-                    } catch (Exception e) {
-                        echo "Kubernetes deployment failed: ${e.message}"
-                        echo "Continuing with pipeline..."
-                    }
+                    echo "Kubernetes deployment stage skipped"
                 }
             }
         }
@@ -93,28 +68,12 @@ pipeline {
         stage('Verify Kubernetes Deployment') {
             when {
                 expression {
-                    return K8S_AVAILABLE
+                    return K8S_ENABLED
                 }
             }
             steps {
                 script {
-                    try {
-                        sh '''
-                        # Get pod name
-                        POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath='{.items[0].metadata.name}')
-                        
-                        # Check pod logs
-                        echo "Pod logs:"
-                        kubectl logs ${POD_NAME}
-                        
-                        # Get service details
-                        echo "Service details:"
-                        kubectl get svc flask-app
-                        '''
-                    } catch (Exception e) {
-                        echo "Kubernetes verification failed: ${e.message}"
-                        echo "Continuing with pipeline..."
-                    }
+                    echo "Kubernetes verification stage skipped"
                 }
             }
         }
@@ -143,14 +102,6 @@ pipeline {
             echo "Pipeline completed successfully!"
             echo "Flask app deployed in Docker container."
             echo "Access the app at: http://localhost:5000 (Docker)"
-            
-            script {
-                if (K8S_AVAILABLE) {
-                    echo "Also deployed to Kubernetes (if available)"
-                } else {
-                    echo "Kubernetes deployment was skipped due to connectivity issues"
-                }
-            }
         }
         failure {
             echo "Pipeline failed. Please check the logs for details."
