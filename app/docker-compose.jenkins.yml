@@ -12,6 +12,7 @@ services:
       - jenkins_data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/.kube:/root/.kube
+      - ~/.minikube:/home/devops/.minikube
     environment:
       - JAVA_OPTS=-Xmx2g
       - KUBECONFIG=/root/.kube/config
