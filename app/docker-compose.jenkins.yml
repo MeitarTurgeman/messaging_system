@@ -25,7 +25,6 @@ services:
     restart: always
     user: root
     privileged: true
-    network_mode: "host"
 
 volumes:
   jenkins_data:
