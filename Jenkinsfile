@@ -6,7 +6,6 @@ pipeline {
         FLASK_CONTAINER_NAME = "flask-app"
         FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
         DOCKER_REGISTRY = "docker.io"
-        MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
         DOCKER_HUB_CRED = credentials('dockerhub')
     }
 
@@ -16,7 +15,20 @@ pipeline {
                 script {
                     sh '''
                     echo "Setting up environment..."
-                    minikube status || minikube start
+                    # Check if minikube is installed, if not, install it
+                    if ! command -v minikube &> /dev/null; then
+                        echo "Installing Minikube..."
+                        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+                        chmod +x minikube-linux-amd64
+                        mv minikube-linux-amd64 /usr/local/bin/minikube
+                    fi
+                    
+                    # Try to get minikube status, start if not running
+                    minikube status || minikube start --driver=docker
+                    
+                    # Get minikube IP
+                    export MINIKUBE_IP=$(minikube ip)
+                    echo "Minikube IP: ${MINIKUBE_IP}"
                     '''
                 }
             }
@@ -56,6 +68,9 @@ pipeline {
             steps {
                 script {
                     sh '''
+                    # Define MINIKUBE_IP within this stage
+                    MINIKUBE_IP=$(minikube ip)
+                    
                     # Load the image into Minikube
                     minikube image load ${FLASK_IMAGE_NAME}
                     
