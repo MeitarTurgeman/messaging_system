@@ -19,7 +19,8 @@ services:
     restart: always
     user: root
     privileged: true
-    network_mode: host
+    extra_hosts:
+      - "minikube:192.168.49.2"
 
 volumes:
   jenkins_data:
