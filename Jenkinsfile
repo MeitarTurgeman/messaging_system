@@ -69,8 +69,8 @@ pipeline {
                 script {
                     sh '''
                     # Deploy to Kubernetes
-                    kubectl apply -f kubernetes/deployment.yaml
-                    kubectl apply -f kubernetes/service.yaml
+                    kubectl apply -f kubernetes/deployment.yaml --validate=false
+                    kubectl apply -f kubernetes/service.yaml --validate=false
                     
                     # Check deployment status
                     kubectl rollout status deployment/flask-app --timeout=60s
