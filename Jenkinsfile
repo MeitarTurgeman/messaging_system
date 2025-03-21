@@ -23,8 +23,16 @@ pipeline {
                         mv minikube-linux-amd64 /usr/local/bin/minikube
                     fi
                     
+                    # Install kubectl if not available
+                    if ! command -v kubectl &> /dev/null; then
+                        echo "Installing kubectl..."
+                        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                        chmod +x kubectl
+                        mv kubectl /usr/local/bin/kubectl
+                    fi
+                    
                     # Try to get minikube status, start if not running
-                    minikube status || minikube start --driver=docker
+                    minikube status || minikube start --driver=none --force
                     
                     # Get minikube IP
                     export MINIKUBE_IP=$(minikube ip)

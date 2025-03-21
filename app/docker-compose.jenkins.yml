@@ -12,12 +12,20 @@ services:
       - ~/.minikube:/root/.minikube
       - /usr/bin/docker:/usr/bin/docker
       - ~/.kube:/root/.kube
+      - /usr:/usr
+      - /lib/modules:/lib/modules
+      - /etc/kubernetes:/etc/kubernetes
+      - /tmp/hostpath-provisioner:/tmp/hostpath-provisioner
+      - /var/lib/minikube:/var/lib/minikube
+      - /var/lib/kubelet:/var/lib/kubelet
     environment:
       - JAVA_OPTS=-Xmx2g
       - KUBECONFIG=/root/.kube/config
+      - MINIKUBE_HOME=/root
     restart: always
     user: root
     privileged: true
+    network_mode: "host"
 
 volumes:
   jenkins_data:
