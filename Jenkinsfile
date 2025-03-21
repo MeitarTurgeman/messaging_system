@@ -15,28 +15,15 @@ pipeline {
                 script {
                     sh '''
                     echo "Setting up environment..."
-                    # Check if minikube is installed, if not, install it
-                    if ! command -v minikube &> /dev/null; then
-                        echo "Installing Minikube..."
-                        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-                        chmod +x minikube-linux-amd64
-                        mv minikube-linux-amd64 /usr/local/bin/minikube
+                    
+                    # Test if we can connect to Kubernetes
+                    if kubectl get nodes &>/dev/null; then
+                        echo "Kubernetes is accessible"
+                        export USE_KUBERNETES=true
+                    else
+                        echo "Kubernetes is not accessible, will use Docker only"
+                        export USE_KUBERNETES=false
                     fi
-                    
-                    # Install kubectl if not available
-                    if ! command -v kubectl &> /dev/null; then
-                        echo "Installing kubectl..."
-                        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                        chmod +x kubectl
-                        mv kubectl /usr/local/bin/kubectl
-                    fi
-                    
-                    # Try to get minikube status, start if not running
-                    minikube status || minikube start --driver=none --force
-                    
-                    # Get minikube IP
-                    export MINIKUBE_IP=$(minikube ip)
-                    echo "Minikube IP: ${MINIKUBE_IP}"
                     '''
                 }
             }
@@ -72,16 +59,15 @@ pipeline {
             }
         }
 
-        stage('Deploy to Minikube') {
+        stage('Deploy to Kubernetes') {
+            when {
+                expression {
+                    return sh(script: 'kubectl get nodes &>/dev/null', returnStatus: true) == 0
+                }
+            }
             steps {
                 script {
                     sh '''
-                    # Define MINIKUBE_IP within this stage
-                    MINIKUBE_IP=$(minikube ip)
-                    
-                    # Load the image into Minikube
-                    minikube image load ${FLASK_IMAGE_NAME}
-                    
                     # Deploy to Kubernetes
                     kubectl apply -f kubernetes/deployment.yaml
                     kubectl apply -f kubernetes/service.yaml
@@ -93,7 +79,12 @@ pipeline {
             }
         }
         
-        stage('Verify Deployment') {
+        stage('Verify Kubernetes Deployment') {
+            when {
+                expression {
+                    return sh(script: 'kubectl get nodes &>/dev/null', returnStatus: true) == 0
+                }
+            }
             steps {
                 script {
                     sh '''
@@ -104,13 +95,9 @@ pipeline {
                     echo "Pod logs:"
                     kubectl logs ${POD_NAME}
                     
-                    # Get service URL
-                    SERVICE_URL=$(minikube service flask-app --url)
-                    echo "Service available at: ${SERVICE_URL}"
-                    
-                    # Test health endpoint
-                    echo "Testing health endpoint..."
-                    curl -s ${SERVICE_URL}/health || echo "Could not reach health endpoint"
+                    # Get service details
+                    echo "Service details:"
+                    kubectl get svc flask-app
                     '''
                 }
             }
@@ -138,8 +125,8 @@ pipeline {
     post {
         success {
             echo "Pipeline completed successfully!"
-            echo "Flask app deployed both in Docker container and Kubernetes."
-            echo "Access the app at: http://localhost:5000 (Docker) or via Minikube service URL."
+            echo "Flask app deployed in Docker container."
+            echo "Access the app at: http://localhost:5000 (Docker)"
         }
         failure {
             echo "Pipeline failed. Please check the logs for details."
