@@ -11,6 +11,17 @@ pipeline {
     }
 
     stages {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    sh '''
+                    echo "Setting up environment..."
+                    minikube status || minikube start
+                    '''
+                }
+            }
+        }
+
         stage('Clone Repository') {
             steps {
                 checkout scm
@@ -33,81 +44,28 @@ pipeline {
             }
         }
         
-        stage('Push Image to Docker Hub (Optional)') {
+        stage('Push to Docker Hub') {
             steps {
                 script {
-                    sh """
-                    docker push ${FLASK_IMAGE_NAME} || echo "Skipping push to Docker Hub"
-                    """
+                    sh "docker push ${FLASK_IMAGE_NAME}"
                 }
             }
         }
 
-        stage('Load Image to Minikube') {
+        stage('Deploy to Minikube') {
             steps {
                 script {
-                    sh """
-                    minikube image load ${FLASK_IMAGE_NAME} || true
-                    """
-                }
-            }
-        }
-
-        stage('Deploy Flask Locally') {
-            steps {
-                script {
-                    sh """
-                    docker stop ${FLASK_CONTAINER_NAME} || true
-                    docker rm ${FLASK_CONTAINER_NAME} || true
-                    docker run -d --name ${FLASK_CONTAINER_NAME} -p 5000:5000 ${FLASK_IMAGE_NAME}
-                    """
-                }
-            }
-        }
-        
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    sh """
-                    # Connect to Kubernetes using certificates
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           apply -f kubernetes/deployment.yaml
-                           
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           apply -f kubernetes/service.yaml
+                    sh '''
+                    # Load the image into Minikube
+                    minikube image load ${FLASK_IMAGE_NAME}
+                    
+                    # Deploy to Kubernetes
+                    kubectl apply -f kubernetes/deployment.yaml
+                    kubectl apply -f kubernetes/service.yaml
                     
                     # Check deployment status
-                    echo "Deployment status:"
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           get pods
-                           
-                    # Get service info
-                    echo "Service details:"
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           get services
-                    
-                    # Display access URL
-                    echo "Getting NodePort..."
-                    NODE_PORT=\$(kubectl --server=https://${MINIKUBE_IP}:8443 \
-                                       --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                                       --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                                       --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                                       get service flask-app -o jsonpath='{.spec.ports[0].nodePort}')
-                    
-                    echo "Your application is accessible at: http://${MINIKUBE_IP}:\${NODE_PORT}"
-                    """
+                    kubectl rollout status deployment/flask-app --timeout=60s
+                    '''
                 }
             }
         }
@@ -115,29 +73,40 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 script {
-                    sh """
-                    # Wait for deployment to be ready
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           rollout status deployment/flask-app --timeout=60s
-                    
+                    sh '''
                     # Get pod name
-                    POD_NAME=\$(kubectl --server=https://${MINIKUBE_IP}:8443 \
-                                      --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                                      --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                                      --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                                      get pods -l app=flask-app -o jsonpath='{.items[0].metadata.name}')
+                    POD_NAME=$(kubectl get pods -l app=flask-app -o jsonpath='{.items[0].metadata.name}')
                     
                     # Check pod logs
                     echo "Pod logs:"
-                    kubectl --server=https://${MINIKUBE_IP}:8443 \
-                           --certificate-authority=/var/jenkins_home/.minikube/ca.crt \
-                           --client-certificate=/var/jenkins_home/.minikube/profiles/minikube/client.crt \
-                           --client-key=/var/jenkins_home/.minikube/profiles/minikube/client.key \
-                           logs \${POD_NAME}
-                    """
+                    kubectl logs ${POD_NAME}
+                    
+                    # Get service URL
+                    SERVICE_URL=$(minikube service flask-app --url)
+                    echo "Service available at: ${SERVICE_URL}"
+                    
+                    # Test health endpoint
+                    echo "Testing health endpoint..."
+                    curl -s ${SERVICE_URL}/health || echo "Could not reach health endpoint"
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy Locally') {
+            steps {
+                script {
+                    sh '''
+                    # Stop and remove existing container if it exists
+                    docker stop ${FLASK_CONTAINER_NAME} || true
+                    docker rm ${FLASK_CONTAINER_NAME} || true
+                    
+                    # Run the container locally
+                    docker run -d --name ${FLASK_CONTAINER_NAME} -p 5000:5000 ${FLASK_IMAGE_NAME}
+                    
+                    # Verify container is running
+                    docker ps | grep ${FLASK_CONTAINER_NAME}
+                    '''
                 }
             }
         }
@@ -145,11 +114,12 @@ pipeline {
     
     post {
         success {
-            echo "CI/CD Pipeline completed successfully!"
-            echo "Flask application is running in Docker container and Kubernetes."
+            echo "Pipeline completed successfully!"
+            echo "Flask app deployed both in Docker container and Kubernetes."
+            echo "Access the app at: http://localhost:5000 (Docker) or via Minikube service URL."
         }
         failure {
-            echo "CI/CD Pipeline failed. Please check the logs for details."
+            echo "Pipeline failed. Please check the logs for details."
         }
     }
 }
