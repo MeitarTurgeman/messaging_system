@@ -7,7 +7,7 @@ pipeline {
         FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
         DOCKER_REGISTRY = "docker.io"
         DOCKER_HUB_CRED = credentials('dockerhub')
-        K8S_ENABLED = false  // Set to false to disable Kubernetes stages
+        K8S_ENABLED = false 
     }
 
     stages {
@@ -101,7 +101,6 @@ pipeline {
         success {
             echo "Pipeline completed successfully!"
             echo "Flask app deployed in Docker container."
-            echo "Access the app at: http://localhost:5000 (Docker)"
         }
         failure {
             echo "Pipeline failed. Please check the logs for details."
