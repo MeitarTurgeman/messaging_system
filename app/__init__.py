@@ -1,3 +1,5 @@
+__version__ = "1.0.0"
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow

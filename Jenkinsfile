@@ -1,101 +1,64 @@
 pipeline {
     agent any
-
-    environment {
-        DOCKER_USER = "meitarturgeman"
-        FLASK_CONTAINER_NAME = "flask-app"
-        FLASK_IMAGE_NAME = "meitarturgeman/messages-api:latest"
-        DOCKER_REGISTRY = "docker.io"
-        DOCKER_HUB_CRED = credentials('dockerhub')
-        K8S_ENABLED = false 
-    }
-
     stages {
-        stage('Setup Environment') {
+        stage('increment version') {
             steps {
                 script {
-                    sh '''
-                    echo "Setting up environment..."
-                    echo "Kubernetes stages disabled for now."
-                    '''
-                }
-            }
-        }
-
-        stage('Clone Repository') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Login to Docker Hub') {
-            steps {
-                script {
-                    sh 'echo $DOCKER_HUB_CRED_PSW | docker login -u $DOCKER_HUB_CRED_USR --password-stdin || true'
-                }
-            }
-        }
-
-        stage('Build Flask Docker Image') {
-            steps {
-                script {
-                    sh "docker build -t ${FLASK_IMAGE_NAME} -f app/Dockerfile-flask ."
-                }
-            }
-        }
-        
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    sh "docker push ${FLASK_IMAGE_NAME}"
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            when {
-                expression {
-                    return K8S_ENABLED
-                }
-            }
-            steps {
-                script {
-                    echo "Kubernetes deployment stage skipped"
-                }
-            }
-        }
-        
-        stage('Verify Kubernetes Deployment') {
-            when {
-                expression {
-                    return K8S_ENABLED
-                }
-            }
-            steps {
-                script {
-                    echo "Kubernetes verification stage skipped"
-                }
-            }
-        }
-        
-        stage('Deploy Locally') {
-            steps {
-                script {
-                    sh '''
-                    # Stop and remove existing container if it exists
-                    docker stop ${FLASK_CONTAINER_NAME} || true
-                    docker rm ${FLASK_CONTAINER_NAME} || true
-                    
-                    # Run the container locally
-                    docker run -d --name ${FLASK_CONTAINER_NAME} -p 5000:5000 ${FLASK_IMAGE_NAME}
-                    
-                    # Verify container is running
-                    docker ps | grep ${FLASK_CONTAINER_NAME}
-                    '''
+                    echo 'incrementing app version...'
+                    sh 'mvn build-helper:parse-version versions:set \
+                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
+                        versions:commit'
+                    def matcher = readFile('__init__.py') =~ '__version__ = "(\\d+\\.\\d+\\.\\d+)"'
+                    def version = matcher[0][1]
+                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
                 }
             }
         }
     }
+    stage('build image') {
+            steps {
+                script {
+                    echo "building the docker image..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        sh "docker build -t meitarturgeman/messages-api:${IMAGE_NAME} ."
+                        sh "echo $PASS | docker login -u $USER --password-stdin"
+                        sh "docker push meitarturgeman/messages-api:${IMAGE_NAME}"
+                    }
+                }
+            }
+        }
+        stage('deploy') {
+            steps {
+                script {
+                    // def dockerCmd = 'docker run -d -p 5000:5000 meitarturgeman/messages-api:${IMAGE_NAME}'
+                    // def dockerComposeCmd = "docker-compose -f docker-compose.yml up --detach"
+                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
+                    def ec2Instance = "ec2-user@18.184.54.160"
+                    sshagent(['ec2-server-key']) {
+                        sh "scp server-cmds.sh ${ec2Instance}:/home/ec2-user"
+                        sh "scp docker-compose.yaml ${ec2Instance}:/home/ec2-user"
+                        sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
+                    } 
+                }
+            }
+        }
+
+        stage('commit version update') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                        // git config here for the first time run
+                        sh 'git config --global user.email "jenkins@example.com"'
+                        sh 'git config --global user.name "jenkins"'
+
+                        sh "git remote set-url origin https://${USER}:${PASS}@github.com/meitarturgeman/messaging_system.git"
+                        sh 'git add .'
+                        sh 'git commit -m "ci: version bump"'
+                        sh 'git push origin HEAD:main'
+                    }
+                }
+            }
+        }
     
     post {
         success {
