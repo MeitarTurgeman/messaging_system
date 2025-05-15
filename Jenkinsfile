@@ -5,17 +5,22 @@ pipeline {
             steps {
                 script {
                     echo 'incrementing app version...'
-                    sh 'mvn build-helper:parse-version versions:set \
-                        -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
-                        versions:commit'
-                    def matcher = readFile('__init__.py') =~ '__version__ = "(\\d+\\.\\d+\\.\\d+)"'
-                    def version = matcher[0][1]
-                    env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                    sh '''
+                    FILE=app/__init__.py
+                    OLD_VERSION=$(grep -oP '__version__ = "\\K[0-9]+\\.[0-9]+\\.[0-9]+' $FILE)
+                    IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VERSION"
+                    NEW_PATCH=$((PATCH + 1))
+                    NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+                    sed -i.bak "s/__version__ = \\".*\\"/__version__ = \\"$NEW_VERSION\\"/" $FILE
+                    echo $NEW_VERSION > version.tmp
+                    '''
+
+                    def version = readFile('version.tmp').trim()
+                    env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
                 }
             }
         }
-    }
-    stage('build image') {
+        stage('build image') {
             steps {
                 script {
                     echo "building the docker image..."
@@ -42,7 +47,6 @@ pipeline {
                 }
             }
         }
-
         stage('commit version update') {
             steps {
                 script {
@@ -59,6 +63,7 @@ pipeline {
                 }
             }
         }
+    }
     
     post {
         success {
