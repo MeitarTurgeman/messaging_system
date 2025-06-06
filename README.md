@@ -128,9 +128,11 @@ Supports any K8s cluster (Minikube, EKS, etc):
 
 Deploy with kubectl:
    <pre>
-   kubectl apply -f kubernetes/postgres.yaml
+   kubectl apply -f kubernetes/postgres-deployment.yaml
    kubectl apply -f kubernetes/deployment.yaml
-   kubectl apply -f kubernetes/service.yaml
+   kubectl apply -f kubernetes/jenkins-deployment.yaml
+   kubectl apply -f kubernetes/app-secret.yaml
+   kubectl apply -f kubernetes/postgres-secret.yaml
    </pre>
 
 Access the service:
@@ -160,8 +162,11 @@ Access the service:
 ## 📝 Environment Variables
 
 See .env.example. Main variables:
-	-	DATABASE_URL — Postgres connection string (e.g., postgresql://user:pass@host:5432/db)
-	-	SECRET_KEY — strong JWT secret for production
+	-	DATABASE_URL — <TO_BE_FILLED>
+	-  SECRET_KEY — <TO_BE_FILLED>
+   -  POSTGRES_USER - <TO_BE_FILLED>
+   -  POSTGRES_PASSWORD - <TO_BE_FILLED>
+   -  POSTGRES_DB - <TO_BE_FILLED>
 
 ---
 
