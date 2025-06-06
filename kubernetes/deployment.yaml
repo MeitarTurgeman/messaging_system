@@ -25,11 +25,16 @@ spec:
           env:
             - name: FLASK_ENV
               value: production
-            # - name: DATABASE_URL
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: myapp-secrets
-            #       key: DATABASE_URL
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: DATABASE_URL
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: SECRET_KEY
           livenessProbe:
             httpGet:
               path: /
