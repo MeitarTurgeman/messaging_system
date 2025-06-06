@@ -34,9 +34,11 @@ spec:
   selector:
     app: jenkins
   ports:
-    - port: 8080
+    - name: web
+      port: 8080
       targetPort: 8080
-      nodePort: 32080   # Jenkins Web UI
-    - port: 50000
+      nodePort: 32080      # Web UI
+    - name: agent
+      port: 50000
       targetPort: 50000
-      nodePort: 32050   # Jenkins agent port
+      nodePort: 32050      # Jenkins agents
