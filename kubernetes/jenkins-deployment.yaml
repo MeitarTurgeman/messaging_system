@@ -39,4 +39,4 @@ spec:
       nodePort: 32080   # Jenkins Web UI
     - port: 50000
       targetPort: 50000
-      nodePort: 50000   # Jenkins agent port
+      nodePort: 32050   # Jenkins agent port
