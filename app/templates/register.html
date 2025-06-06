@@ -33,11 +33,12 @@
 
 <script>
 document.getElementById("registerForm").addEventListener("submit", async function(event) {
+  const API_URL = "http://localhost:5000";
   event.preventDefault();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const res = await fetch("http://localhost:30007/register", {
+  const res = await fetch(`${API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
@@ -48,8 +49,6 @@ document.getElementById("registerForm").addEventListener("submit", async functio
   if (res.ok) {
     document.getElementById("registerResult").innerHTML =
       `<div class="alert alert-success">Registration successful!</div>`;
-    // אפשר לנתב ישירות ל-login אם רוצים:
-    // window.location.href = "/login";
   } else {
     document.getElementById("registerResult").innerHTML =
       `<div class="alert alert-danger">${data.error || "Registration failed."}</div>`;

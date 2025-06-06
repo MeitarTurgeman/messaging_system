@@ -55,6 +55,7 @@
 
 <script>
 document.getElementById("sendMessageForm").addEventListener("submit", async function(event) {
+  const API_URL = "http://localhost:5000";
   event.preventDefault();
 
   const receiver = document.getElementById("receiver").value;
@@ -68,7 +69,7 @@ document.getElementById("sendMessageForm").addEventListener("submit", async func
     return;
   }
 
-  const res = await fetch("http://localhost:30007/messages", {
+  const res = await fetch(`${API_URL}/messages`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
