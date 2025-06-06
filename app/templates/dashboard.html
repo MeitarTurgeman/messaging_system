@@ -1,8 +1,9 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="row">
   <div class="col-md-4">
     <h3>New Message</h3>
-    <form method="POST" action="/send_message">
+    <form id="sendMessageForm">
       <div class="mb-3">
         <label for="receiver" class="form-label">To</label>
         <input
@@ -29,6 +30,7 @@
       </div>
       <button type="submit" class="btn btn-primary">Send Message</button>
     </form>
+    <div id="sendMessageResult" class="mt-2"></div>
   </div>
 
   <div class="col-md-8">
@@ -50,4 +52,42 @@
     </div>
   </div>
 </div>
+
+<script>
+document.getElementById("sendMessageForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const receiver = document.getElementById("receiver").value;
+  const subject = document.getElementById("subject").value;
+  const message = document.getElementById("message").value;
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    document.getElementById("sendMessageResult").innerHTML =
+      '<div class="alert alert-danger">You must be logged in to send a message.</div>';
+    return;
+  }
+
+  const res = await fetch("http://localhost:30007/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({ receiver, subject, message })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    document.getElementById("sendMessageResult").innerHTML =
+      '<div class="alert alert-success">Message sent successfully!</div>';
+    // אפשר לרוקן שדות/לרענן הודעות אם רוצים
+    document.getElementById("sendMessageForm").reset();
+  } else {
+    document.getElementById("sendMessageResult").innerHTML =
+      `<div class="alert alert-danger">${data.error || "Failed to send message."}</div>`;
+  }
+});
+</script>
 {% endblock %}

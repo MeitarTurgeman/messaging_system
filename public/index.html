@@ -58,6 +58,7 @@
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
           </form>
+          <button id="logoutBtn" class="btn btn-secondary mt-3" style="display:none;">Logout</button>
         </div>
 
         <div class="col-md-6">
@@ -100,13 +101,21 @@
     </div>
 
     <script>
-      let token = localStorage.getItem("token");
-      const API_URL = "http://127.0.0.1:5000";
+      const API_URL = "http://localhost:30007";
+      let token = localStorage.getItem("access_token");
 
-      if (token) {
-        document.getElementById("messageSection").style.display = "block";
-        loadMessages();
+      // Show message section if logged in
+      function showApp() {
+        if (token) {
+          document.getElementById("messageSection").style.display = "block";
+          document.getElementById("logoutBtn").style.display = "block";
+          loadMessages();
+        } else {
+          document.getElementById("messageSection").style.display = "none";
+          document.getElementById("logoutBtn").style.display = "none";
+        }
       }
+      showApp();
 
       document
         .getElementById("registerForm")
@@ -138,12 +147,20 @@
           });
           const data = await response.json();
           if (data.access_token) {
-            localStorage.setItem("token", data.access_token);
-            document.getElementById("messageSection").style.display = "block";
-            loadMessages();
+            localStorage.setItem("access_token", data.access_token);
+            token = data.access_token;
+            showApp();
           } else {
-            alert(data.error);
+            alert(data.error || "Login failed.");
           }
+        });
+
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", function () {
+          localStorage.removeItem("access_token");
+          token = null;
+          showApp();
         });
 
       document
@@ -154,7 +171,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             },
             body: JSON.stringify({
               receiver: document.getElementById("receiver").value,
@@ -167,14 +184,14 @@
             document.getElementById("messageForm").reset();
             loadMessages();
           } else {
-            alert(data.error);
+            alert(data.error || "Failed to send message.");
           }
         });
 
       async function loadMessages() {
         const response = await fetch(`${API_URL}/messages`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
         });
         const messages = await response.json();
