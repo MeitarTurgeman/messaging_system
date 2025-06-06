@@ -1,108 +1,180 @@
 # Messaging System with DevOps Pipeline
 
-A secure messaging application with user authentication deployed using modern DevOps practices including Jenkins, Docker, and Kubernetes.
+A production-ready, secure messaging API built with Python Flask, featuring JWT authentication, message status tracking, and a full modern DevOps pipeline: Jenkins CI/CD, Docker, and Kubernetes.
 
-## Features
+---
 
-- Secure user authentication with JWT
-- Message sending and receiving between users
-- Message reading status tracking
-- RESTful API for messaging operations
-- CI/CD pipeline with Jenkins
-- Containerized deployment with Docker
-- Kubernetes orchestration for container management
+## 🚀 Overview
 
-## Project Components
+This project demonstrates robust Python backend skills and advanced DevOps workflow design:
 
-- **Flask Application**: Backend API for the messaging system
-- **Jenkins Server**: CI/CD automation server
-- **Docker**: Containerization platform
-- **Minikube**: Local Kubernetes cluster for orchestration
+- **Secure messaging API** — users send and receive messages, with real-time status updates.
+- **JWT-based authentication** for strong user security.
+- **CI/CD pipeline with Jenkins** — build, test, and deploy automatically.
+- **Docker containerization** — consistent, portable builds for any environment.
+- **Kubernetes orchestration** — scalable, resilient deployment on local clusters and the cloud.
 
-## Prerequisites
+---
 
-- Linux/Ubuntu system
-- Docker and Docker Compose
-- Minikube for local Kubernetes deployment
-- Git repository
+## 🛠️ Stack
 
-## Quick Setup
+- **Backend:** Python 3 + Flask + SQLAlchemy + Marshmallow
+- **Authentication:** Flask-JWT-Extended (JWT)
+- **Database:** PostgreSQL (containerized)
+- **CI/CD:** Jenkins (with scripted Jenkinsfile pipeline)
+- **Containerization:** Docker
+- **Orchestration:** Kubernetes (compatible with Minikube, EKS, GKE, AKS)
+- **Testing:** Pytest
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/your-username/messaging-system.git
-   cd messaging-system
-   ```
+---
 
-2. Start Jenkins server:
-   ```bash
-   cd app
-   docker-compose -f docker-compose.jenkins.yml up -d
-   ```
+## 📂 Project Structure
 
-3. Start Flask application:
-   ```bash
-   cd app
-   docker-compose -f docker-compose.flask.yml up -d
-   ```
-
-## Jenkins Setup
-
-1. Access Jenkins at http://localhost:8080
-2. Get the initial admin password:
-   ```bash
-   docker exec jenkins-server cat /var/jenkins_home/secrets/initialAdminPassword
-   ```
-3. Install suggested plugins during setup
-4. Create a Docker Hub credential with ID 'dockerhub'
-5. Create a pipeline pointing to your repository with the Jenkinsfile
-
-## API Endpoints
-
-- **POST /login**: Authenticate and receive JWT token
-- **GET /messages**: Get all messages for the current user
-- **POST /messages**: Send a new message
-- **GET /messages/<id>**: Get a specific message
-- **DELETE /messages/<id>**: Delete a message
-
-## CI/CD Pipeline
-
-The Jenkins pipeline includes the following stages:
-1. Setup Environment (checks Kubernetes connectivity)
-2. Clone Repository
-3. Login to Docker Hub
-4. Build Flask Docker Image
-5. Push to Docker Hub
-6. Deploy to Kubernetes (if available)
-7. Verify Kubernetes Deployment
-8. Deploy Locally (Docker container)
-
-## Kubernetes Deployment
-
-The application is deployed to Kubernetes using:
-- Deployment configuration (kubernetes/deployment.yaml)
-- Service configuration (kubernetes/service.yaml)
-
-You can access the Kubernetes-deployed application using:
-```bash
-minikube service flask-app --url
+<pre>
 ```
-
-## Docker Images
-
-- **jenkins/jenkins:lts**: Jenkins CI/CD server
-- **meitarturgeman/messages-api:latest**: Flask messaging application
-
-## Local Development
-
-To run the Flask application locally without Docker:
-```bash
-pip install -r requirements.txt
-export FLASK_APP=run.py
-export FLASK_ENV=development
-flask run
+├── app/                   # Flask application (routes, models, auth)
+├── tests/                 # Pytest unit & API tests
+├── kubernetes/            # YAML manifests (Deployment, Service, Postgres, Jenkins)
+├── run.py                 # App entrypoint
+├── Dockerfile             # App Docker build config
+├── requirements.txt       # Python dependencies
+├── Jenkinsfile            # CI/CD pipeline definition
+├── .env.example           # Example environment variables
+└── README.md
 ```
+</pre>
 
-## License
+---
+
+## 🖥️ Local Development
+
+1. **Clone the repo:**
+   <pre>
+   ```bash
+   docker build -t meitarturgeman/messages-api:latest .
+   docker run -p 5000:5000 --env-file .env meitarturgeman/messages-api:latest
+   ```
+   </pre>
+
+2. **Setup virtualenv and install dependencies:**
+   <pre>
+   ```
+   bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+   </pre>
+
+3. **Copy & edit environment variables:**
+   <pre>
+   ```
+   bash
+   cp .env.example .env
+   # Edit DATABASE_URL and SECRET_KEY as needed
+   ```
+   </pre>
+
+4. **Run the app locally:**
+   <pre>
+   ```
+   bash
+   export FLASK_APP=run.py
+   flask run
+   ```
+   </pre>
+
+---
+
+## 🧪 Testing
+
+Run unit and API tests (with [pytest](https://docs.pytest.org/)):
+   <pre>
+   ```bash
+   pytest tests/
+   </pre>
+
+---
+
+## 🐳 Docker Usage
+
+Build & run the Flask app locally:
+   <pre>
+   docker build -t meitarturgeman/messages-api:latest .
+   docker run -p 5000:5000 --env-file .env meitarturgeman/messages-api:latest
+   </pre>
+
+---
+
+## 🤖 CI/CD with Jenkins
+
+The pipeline automates:
+	-	Running tests (pytest)
+	-	Building Docker image
+	-	Pushing to Docker Hub
+	-	Deploying to Kubernetes
+
+Quick Jenkins setup:
+	1.	Start Jenkins (jenkins/jenkins:lts), mapped to port 8080.
+	2.	Install recommended plugins.
+	3.	Add credentials for Docker Hub and (if used) Kubernetes.
+	4.	Configure a Pipeline project pointing to this repo and use the provided Jenkinsfile.
+
+---
+
+## ☸️ Kubernetes Deployment
+
+Supports any K8s cluster (Minikube, EKS, etc):
+
+Deploy with kubectl:
+   <pre>
+   kubectl apply -f kubernetes/postgres.yaml
+   kubectl apply -f kubernetes/deployment.yaml
+   kubectl apply -f kubernetes/service.yaml
+   </pre>
+
+Access the service:
+# For Minikube
+   <pre>
+   minikube service flask-app --url
+   </pre>
+
+---
+
+## 🔑 API Endpoints
+
+<pre>
+| Endpoint         | Method | Auth | Description         |
+|------------------|--------|------|---------------------|
+| /register        | POST   | No   | Register new user   |
+| /login           | POST   | No   | Obtain JWT token    |
+| /messages        | GET    | Yes  | Get user messages   |
+| /messages        | POST   | Yes  | Send message        |
+| /messages/&lt;id&gt; | GET    | Yes  | Get specific message|
+| /messages/&lt;id&gt; | DELETE | Yes  | Delete a message    |
+</pre>
+
+
+---
+
+## 📝 Environment Variables
+
+See .env.example. Main variables:
+	-	DATABASE_URL — Postgres connection string (e.g., postgresql://user:pass@host:5432/db)
+	-	SECRET_KEY — strong JWT secret for production
+
+---
+
+## 🛡️ Security & Best Practices
+
+	-	JWT for all sensitive routes
+	-	CI enforces passing tests before deploy
+	-	Docker images built fresh for every release
+	-	Environment variables never hardcoded
+
+---
+
+## 📜 License
 
 MIT License
+Built by Meitar Turgeman

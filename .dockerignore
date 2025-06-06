@@ -1,4 +1,4 @@
-__pycache__
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -9,7 +9,10 @@ venv/
 *.db
 .git
 .gitignore
-.pytest_cache
+.pytest_cache/
 .coverage
 htmlcov/
-.DS_Store 
+.DS_Store
+build/
+dist/
+*.log

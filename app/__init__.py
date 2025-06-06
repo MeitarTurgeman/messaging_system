@@ -1,4 +1,5 @@
-__version__ = "1.0.0"
+from dotenv import load_dotenv
+load_dotenv()
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy

@@ -1,74 +1,49 @@
 pipeline {
     agent any
+    environment {
+        DOCKER_IMAGE = "meitarturgeman/messages-api"
+        IMAGE_TAG = "latest"
+        K8S_NAMESPACE = "default"
+        DEPLOYMENT_NAME = "myapp-deployment"
+    }
     stages {
-        stage('increment version') {
+        stage('test') {
             steps {
-                script {
-                    echo 'incrementing app version...'
-                    sh '''
-                    FILE=app/__init__.py
-                    OLD_VERSION=$(grep -oP '__version__ = "\\K[0-9]+\\.[0-9]+\\.[0-9]+' $FILE)
-                    IFS='.' read -r MAJOR MINOR PATCH <<< "$OLD_VERSION"
-                    NEW_PATCH=$((PATCH + 1))
-                    NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-                    sed -i.bak "s/__version__ = \\".*\\"/__version__ = \\"$NEW_VERSION\\"/" $FILE
-                    echo $NEW_VERSION > version.tmp
-                    '''
-
-                    def version = readFile('version.tmp').trim()
-                    env.IMAGE_NAME = "${version}-${BUILD_NUMBER}"
-                }
+                echo "Running tests with pytest..."
+                sh "pip install --no-cache-dir -r requirements.txt"
+                sh "pip install pytest"
+                sh "pytest tests/"
             }
         }
         stage('build image') {
             steps {
                 script {
-                    echo "building the docker image..."
+                    echo "Building docker image..."
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        sh "docker build -t meitarturgeman/messages-api:${IMAGE_NAME} ."
+                        sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} ."
                         sh "echo $PASS | docker login -u $USER --password-stdin"
-                        sh "docker push meitarturgeman/messages-api:${IMAGE_NAME}"
+                        sh "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"
                     }
                 }
             }
         }
-        stage('deploy') {
+        stage('deploy to kubernetes') {
             steps {
-                script {
-                    // def dockerCmd = 'docker run -d -p 5000:5000 meitarturgeman/messages-api:${IMAGE_NAME}'
-                    // def dockerComposeCmd = "docker-compose -f docker-compose.yml up --detach"
-                    def shellCmd = "bash ./server-cmds.sh ${IMAGE_NAME}"
-                    def ec2Instance = "ec2-user@18.184.54.160"
-                    sshagent(['ec2-server-key']) {
-                        sh "scp server-cmds.sh ${ec2Instance}:/home/ec2-user"
-                        sh "scp docker-compose.yaml ${ec2Instance}:/home/ec2-user"
-                        sh "ssh -o StrictHostKeyChecking=no ${ec2Instance} ${shellCmd}"
-                    } 
-                }
-            }
-        }
-        stage('commit version update') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'gitlab-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                        // git config here for the first time run
-                        sh 'git config --global user.email "jenkins@example.com"'
-                        sh 'git config --global user.name "jenkins"'
-
-                        sh "git remote set-url origin https://${USER}:${PASS}@github.com/meitarturgeman/messaging_system.git"
-                        sh 'git add .'
-                        sh 'git commit -m "ci: version bump"'
-                        sh 'git push origin HEAD:main'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_FILE')]) {
+                    withEnv(["KUBECONFIG=$KUBECONFIG_FILE"]) {
+                        sh """
+                        kubectl set image deployment/${DEPLOYMENT_NAME} messages-api=${DOCKER_IMAGE}:${IMAGE_TAG} -n ${K8S_NAMESPACE}
+                        kubectl rollout status deployment/${DEPLOYMENT_NAME} -n ${K8S_NAMESPACE}
+                        """
                     }
                 }
             }
         }
     }
-    
     post {
         success {
             echo "Pipeline completed successfully!"
-            echo "Flask app deployed in Docker container."
+            echo "Flask app deployed to Kubernetes."
         }
         failure {
             echo "Pipeline failed. Please check the logs for details."

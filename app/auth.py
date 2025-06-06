@@ -5,8 +5,11 @@ from app.models import User
 
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/register', methods=['POST', 'OPTIONS'])
 def register():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     data = request.get_json()
     
     if User.query.filter_by(email=data['email']).first():
@@ -20,8 +23,11 @@ def register():
     
     return jsonify({'message': 'User registered successfully'}), 201
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
     
