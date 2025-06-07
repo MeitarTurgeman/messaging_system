@@ -162,6 +162,7 @@ Access the service:
 ## 📝 Environment Variables
 
 See .env.example. Main variables:
+
 	-	DATABASE_URL — <TO_BE_FILLED>
 	-  SECRET_KEY — <TO_BE_FILLED>
    -  POSTGRES_USER - <TO_BE_FILLED>
