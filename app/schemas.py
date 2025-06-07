@@ -20,7 +20,7 @@ class MessageSchema(ma.SQLAlchemySchema):
     receiver = ma.auto_field()
     subject = ma.auto_field()
     message = ma.auto_field()
-    creation_date = ma.auto_field()
+    creation_date = fields.DateTime(format='%d/%m/%Y')
     is_read = ma.auto_field()
 
 message_schema = MessageSchema()
