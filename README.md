@@ -168,7 +168,7 @@ See .env.example. Main variables:
    
    Flask app:
    -  DATABASE_URL - <TO_BE_FILLED>
-	-  SECRET_KEY - <TO_BE_FILLED>
+   -  SECRET_KEY - <TO_BE_FILLED>
 
    Postgres:
    -  POSTGRES_USER - <TO_BE_FILLED>
