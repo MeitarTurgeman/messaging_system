@@ -44,6 +44,9 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 ├── app/                   # Flask application (routes, models, auth)
 ├── tests/                 # Pytest unit & API tests
 ├── kubernetes/            # YAML manifests (Deployment, Service, Postgres, Jenkins)
+│   ├── deployment.yaml
+|   ├── jenkins-deployment.yaml
+|   ├── postgres-deployment.yaml
 ├── terraform/             # Terraform modules: EKS, VPC, RDS, Security groups variables
 │   ├── main.tf
 |   ├── main.tf
