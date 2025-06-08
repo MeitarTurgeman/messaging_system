@@ -1,6 +1,6 @@
 # Messaging System with DevOps Pipeline
 
-A production-ready, secure messaging API built with Python Flask, featuring JWT authentication, message status tracking, and a full modern DevOps pipeline: Jenkins CI/CD, Docker, and Kubernetes.
+A production-ready, secure messaging API built with Python Flask, featuring JWT authentication, message status tracking, and a full modern DevOps pipeline: Jenkins CI/CD, Docker, Kubernetes, and Infrastructure as Code with Terraform on AWS.
 
 ---
 
@@ -13,6 +13,7 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 - **CI/CD pipeline with Jenkins** — build, test, and deploy automatically.
 - **Docker containerization** — consistent, portable builds for any environment.
 - **Kubernetes orchestration** — scalable, resilient deployment on local clusters and the cloud.
+- **Infrastructure as Code** - with Terraform: EKS cluster, RDS database, VPC, and more.
 
 ---
 
@@ -25,6 +26,7 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 - **Containerization:** Docker
 - **Orchestration:** Kubernetes (compatible with Minikube, EKS, GKE, AKS)
 - **Testing:** Pytest
+- **Infrastructure as Code:** Terraform (AWS modules) Testing: Pytest
 
 ---
 
@@ -35,6 +37,13 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 ├── app/                   # Flask application (routes, models, auth)
 ├── tests/                 # Pytest unit & API tests
 ├── kubernetes/            # YAML manifests (Deployment, Service, Postgres, Jenkins)
+├── terraform/             # Terraform modules: EKS, VPC, RDS, Security groups variables
+│   ├── main.tf
+|   ├── main.tf
+|   ├── variables.tf
+|   ├── outputs.tf
+|   ├── provider.tf
+|   ├── versions.tf
 ├── run.py                 # App entrypoint
 ├── Dockerfile             # App Docker build config
 ├── requirements.txt       # Python dependencies
@@ -45,6 +54,29 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 </pre>
 
 ---
+
+## ☁️ Cloud Infrastructure (Terraform)
+
+Terraform modules are included to provision all AWS infrastructure automatically:
+
+   - VPC - <Network isolation for your cluster & database>
+   - EKS (Kubernetes) - <Managed cluster for your workloads>
+   - RDS (PostgreSQL) - <Managed database service for production>
+   - Security Groups - <Controlled access between components>
+
+   Deploy infrastructure in AWS:
+   <pre>
+   ```
+   export TF_VAR_rds_db_name=yourdbname
+   export TF_VAR_rds_username=yourdbuser
+   export TF_VAR_rds_password=yourdbpassword
+   
+   cd terraform/
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+   </pre>
 
 ## 🖥️ Local Development
 
