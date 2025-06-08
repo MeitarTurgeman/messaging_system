@@ -50,7 +50,8 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 
 1. **Clone the repo:**
    <pre>
-   ```bash
+   ```
+   bash
    docker build -t meitarturgeman/messages-api:latest .
    docker run -p 5000:5000 --env-file .env meitarturgeman/messages-api:latest
    ```
@@ -71,7 +72,7 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
    ```
    bash
    cp .env.example .env
-   # Edit DATABASE_URL and SECRET_KEY as needed
+   # Edit DATABASE_URL and SECRET_KEY as needed for the application
    ```
    </pre>
 
@@ -90,7 +91,8 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 
 Run unit and API tests (with [pytest](https://docs.pytest.org/)):
    <pre>
-   ```bash
+   ```
+   bash
    pytest tests/
    </pre>
 
@@ -137,8 +139,9 @@ Deploy with kubectl:
 
 Access the service:
 # For Minikube
+   change the port for the application to 5000:
    <pre>
-   minikube service flask-app --url
+   kubectl port-forward svc/myapp-service 5000:5000
    </pre>
 
 ---
@@ -162,9 +165,11 @@ Access the service:
 ## 📝 Environment Variables
 
 See .env.example. Main variables:
-
+   Flask app:
 	-	DATABASE_URL — <TO_BE_FILLED>
 	-  SECRET_KEY — <TO_BE_FILLED>
+
+   Postgres:
    -  POSTGRES_USER - <TO_BE_FILLED>
    -  POSTGRES_PASSWORD - <TO_BE_FILLED>
    -  POSTGRES_DB - <TO_BE_FILLED>
