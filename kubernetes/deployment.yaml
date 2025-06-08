@@ -16,6 +16,11 @@ spec:
         app: myapp
         tier: frontend
     spec:
+      tolerations:
+        - key: "workload"
+          operator: "Equal"
+          value: "frontend"
+          effect: "NoSchedule"
       containers:
         - name: messages-api
           image: meitarturgeman/messages-api:latest
@@ -54,10 +59,12 @@ metadata:
   name: myapp-service
   labels:
     app: myapp
+    tier: frontend
 spec:
   type: LoadBalancer
   selector:
     app: myapp
+    tier: frontend
   ports:
     - port: 5000
       targetPort: 5000

@@ -18,11 +18,18 @@ spec:
   selector:
     matchLabels:
       app: jenkins
+      tier: ci
   template:
     metadata:
       labels:
         app: jenkins
+        tier: ci
     spec:
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "jenkins"
+          effect: "NoSchedule"
       containers:
         - name: jenkins
           image: jenkins/jenkins:lts
@@ -45,6 +52,7 @@ spec:
   type: LoadBalancer
   selector:
     app: jenkins
+    tier: ci
   ports:
     - name: web
       port: 8080

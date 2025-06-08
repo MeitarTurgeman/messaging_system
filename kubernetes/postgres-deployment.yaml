@@ -14,7 +14,7 @@ kind: Deployment
 metadata:
   name: postgres
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: postgres
@@ -23,6 +23,11 @@ spec:
       labels:
         app: postgres
     spec:
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "postgres"
+          effect: "NoSchedule"
       containers:
         - name: postgres
           image: postgres:15
