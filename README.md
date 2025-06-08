@@ -59,10 +59,10 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 
 Terraform modules are included to provision all AWS infrastructure automatically:
 
-   - VPC - <Network isolation for your cluster & database>
-   - EKS (Kubernetes) - <Managed cluster for your workloads>
-   - RDS (PostgreSQL) - <Managed database service for production>
-   - Security Groups - <Controlled access between components>
+   - VPC - Network isolation for your cluster & database
+   - EKS (Kubernetes) - Managed cluster for your workloads
+   - RDS (PostgreSQL) - Managed database service for production
+   - Security Groups - Controlled access between components
 
    Deploy infrastructure in AWS:
    <pre>
@@ -70,7 +70,7 @@ Terraform modules are included to provision all AWS infrastructure automatically
    export TF_VAR_rds_db_name=yourdbname
    export TF_VAR_rds_username=yourdbuser
    export TF_VAR_rds_password=yourdbpassword
-   
+
    cd terraform/
    terraform init
    terraform plan
