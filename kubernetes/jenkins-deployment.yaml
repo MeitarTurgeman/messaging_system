@@ -42,7 +42,7 @@ kind: Service
 metadata:
   name: jenkins-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: jenkins
   ports:
@@ -53,4 +53,4 @@ spec:
     - name: agent
       port: 50000
       targetPort: 50000
-      nodePort: 32050      # Jenkins agents
+      # nodePort: 32050      # Jenkins agents

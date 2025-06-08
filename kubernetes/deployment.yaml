@@ -25,11 +25,11 @@ spec:
           env:
             - name: FLASK_ENV
               value: production
-            - name: DATABASE_URL
+            - name: CLOUD_DATABASE_URL
               valueFrom:
                 secretKeyRef:
                   name: app-secret
-                  key: DATABASE_URL
+                  key: CLOUD_DATABASE_URL
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -55,7 +55,7 @@ metadata:
   labels:
     app: myapp
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: myapp
   ports:

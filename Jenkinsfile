@@ -2,20 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE   = "meitarturgeman/messages-api"
-        IMAGE_TAG      = "latest"
-        K8S_NAMESPACE  = "default"
+        DOCKER_IMAGE    = "meitarturgeman/messages-api"
+        IMAGE_TAG       = "latest"
+        K8S_NAMESPACE   = "default"
         DEPLOYMENT_NAME = "myapp-deployment"
     }
 
     stages {
         stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.11'
-                    args '-v $HOME/.cache/pip:/root/.cache/pip'
-                }
-            }
             steps {
                 echo "Installing dependencies and running tests..."
                 sh "pip install --no-cache-dir -r requirements.txt"
