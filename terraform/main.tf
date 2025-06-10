@@ -151,7 +151,7 @@ resource "aws_s3_bucket" "app-data" {
   }
 }
 
-resource "aws_s3_bucket_object" "app-data-2025" {
+resource "aws_s3_object" "app-data-2025" {
   content = "/root/app-data/app-data-2025.doc"
   key = "app-data-2025.doc"
   bucket = aws_s3_bucket.app-data.id
