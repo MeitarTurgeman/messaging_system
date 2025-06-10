@@ -141,13 +141,41 @@ resource "aws_ecr_repository" "app" {
 }
 
 # S3 Bucket
-resource "aws_s3_bucket" "app_data" {
+resource "aws_s3_bucket" "app-data" {
   bucket = "${var.cluster_name}-bucket"
   force_destroy = true
   tags = {
     Name        = "${var.cluster_name}-bucket"
     Environment = "dev"
+    Description = "S3 bucket for application data"
   }
+}
+
+resource "aws_s3_bucket_object" "app-data-2025" {
+  content = "/root/app-data/app-data-2025.doc"
+  key = "app-data-2025.doc"
+  bucket = aws_s3_bucket.app-data.id
+}
+
+resource "aws_s3_bucket_policy" "app-data-policy" {
+  bucket = aws_s3_bucket.app-data.id
+  policy = <<EOF
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "*",
+        "Effect": "Allow",
+        "Resource": "arn:aws:s3:::${aws_s3_bucket.app-data.id}/*"
+        "Principal": {
+          "AWS": [
+            "${data.aws_iam_group.app-data.arn}"
+          ]
+        },
+      }
+    ]
+  }
+EOF
 }
 
 # Route 53

@@ -14,3 +14,7 @@ data "aws_eks_cluster" "cluster" {
 data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_name
 }
+
+data "aws_iam_group" "app-data" {
+  group_name = "app-data-group"
+}
