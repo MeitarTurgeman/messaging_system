@@ -15,7 +15,7 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 - **Docker containerization** — consistent, portable builds for any environment.
 - **Kubernetes orchestration** — scalable, resilient deployment on local clusters and the cloud.
 - **Infrastructure as Code** - with Terraform: EKS cluster, RDS database, VPC, and more.
-- **AWS Native Services** - ECR, S3, Route 53, Load Balancer, CloudWatch, Auto Scaling Groups.
+- **AWS Native Services** - ECR, S3, Load Balancer, CloudWatch, Auto Scaling Groups.
 
 ---
 
@@ -31,7 +31,6 @@ This project demonstrates robust Python backend skills and advanced DevOps workf
 - **Infrastructure as Code:** Terraform (AWS modules) Testing: Pytest
 - **Registry:** ECR (AWS Elastic Container Registry)
 - **Object Storage:** S3 Bucket
-- **DNS Management:** Route 53
 - **Monitoring & Logs:** CloudWatch
 - **Autoscaling:** Auto Scaling Groups (EKS nodegroups & ALB target groups)
 
@@ -74,7 +73,6 @@ Terraform modules are included to provision all AWS infrastructure automatically
    - RDS (PostgreSQL) - Managed database service for production
    - ECR (Elastic Container Registry) – Private Docker image storage
    - S3 Bucket – Store user data or backups
-   - Route 53 – DNS management for your app domain
    - Application Load Balancer – Distribute traffic to app pods
    - CloudWatch – Centralized logging & monitoring
    - Autoscaling – NodeGroups & app scaling
@@ -238,7 +236,7 @@ See .env.example. Main variables:
 
 ## ✨ Cloud AWS Resources Used
 
-VPC, EKS, RDS, ECR, S3, Route53, CloudWatch, ALB, Autoscaling, Security Groups
+VPC, EKS, RDS, ECR, S3, CloudWatch, ALB, Autoscaling, Security Groups
 
 ## 📜 License
 
